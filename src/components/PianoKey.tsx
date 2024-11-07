@@ -8,19 +8,26 @@ interface PianoKeyProps {
 }
 
 export function PianoKey({ keyChar, noteData, isActive }: PianoKeyProps) {
+  const isBlack = noteData.type === 'black';
+  
   return (
     <div
-      className={`col-span-1 aspect-square rounded-lg flex items-center justify-center text-center transition-all ${
-        isActive
-          ? 'bg-indigo-500 scale-95 shadow-lg'
-          : 'bg-white/20 hover:bg-white/30'
-      }`}
+      className={`
+        ${isBlack ? 'w-12 h-32' : 'w-16 h-48'} 
+        relative flex items-end justify-center pb-4
+        rounded-lg transition-all
+        ${isBlack ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-100'}
+        ${isActive ? 'scale-[0.98] ' + (isBlack ? 'bg-gray-700' : 'bg-gray-200') : ''}
+        ${isBlack ? 'shadow-lg' : 'shadow-md'}
+      `}
     >
-      <div className="flex flex-col gap-1">
-        <span className="text-white text-xl font-bold uppercase">
+      <div className="flex flex-col items-center gap-1">
+        <span className={`text-sm font-bold uppercase ${isBlack ? 'text-gray-400' : 'text-gray-400'}`}>
           {keyChar}
         </span>
-        <span className="text-indigo-200 text-sm">{noteData.note}</span>
+        <span className={`text-xs ${isBlack ? 'text-gray-500' : 'text-gray-500'}`}>
+          {noteData.note}
+        </span>
       </div>
     </div>
   );
