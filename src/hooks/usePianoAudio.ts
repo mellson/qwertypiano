@@ -14,20 +14,20 @@ export function usePianoAudio() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      
+
       // Handle kill shortcut (Escape key)
       if (e.key === 'Escape') {
         killAllNotes();
         return;
       }
-      
+
       // Prevent key repeat events
       if (e.repeat || keyStates.current.get(key)) return;
-      
+
       if (NOTES[key as keyof typeof NOTES]) {
         keyStates.current.set(key, true);
-        playNote(key);
-        setActiveKeys(prev => new Set(prev).add(key));
+        playNote(key, isMuted);
+        setActiveKeys((prev) => new Set(prev).add(key));
       }
     };
 
@@ -36,7 +36,7 @@ export function usePianoAudio() {
       if (NOTES[key as keyof typeof NOTES]) {
         keyStates.current.delete(key);
         stopNote(key);
-        setActiveKeys(prev => {
+        setActiveKeys((prev) => {
           const newSet = new Set(prev);
           newSet.delete(key);
           return newSet;
@@ -69,15 +69,15 @@ export function usePianoAudio() {
       window.removeEventListener('blur', handleBlur);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       cleanup();
-      
+
       // Cleanup audio context
       if (audioContext.current?.state !== 'closed') {
         audioContext.current?.close();
       }
     };
-  }, []);
+  }, [isMuted]);
 
-  const playNote = (key: string) => {
+  function playNote(key: string, isMuted: boolean) {
     if (!audioContext.current || isMuted) return;
 
     // Stop any existing note for this key
@@ -85,7 +85,7 @@ export function usePianoAudio() {
 
     const oscillator = audioContext.current.createOscillator();
     const gainNode = audioContext.current.createGain();
-    
+
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(
       NOTES[key as keyof typeof NOTES].freq,
@@ -93,34 +93,40 @@ export function usePianoAudio() {
     );
 
     gainNode.gain.setValueAtTime(0, audioContext.current.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.current.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.current.currentTime + 0.2);
+    gainNode.gain.linearRampToValueAtTime(
+      0.5,
+      audioContext.current.currentTime + 0.1
+    );
+    gainNode.gain.linearRampToValueAtTime(
+      0.3,
+      audioContext.current.currentTime + 0.2
+    );
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.current.destination);
     oscillator.start();
-    
+
     audioNodes.current.set(key, { oscillator, gainNode });
-  };
+  }
 
   const stopNote = (key: string) => {
     const nodes = audioNodes.current.get(key);
     if (nodes) {
       const { oscillator, gainNode } = nodes;
       const currentTime = audioContext.current?.currentTime || 0;
-      
+
       try {
         gainNode.gain.cancelScheduledValues(currentTime);
         gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
         gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.05);
-        
+
         setTimeout(() => {
           oscillator.stop();
           oscillator.disconnect();
           gainNode.disconnect();
           audioNodes.current.delete(key);
         }, 50);
-      } catch (error) {
+      } catch {
         // Fallback cleanup if the audio node is in an invalid state
         oscillator.disconnect();
         gainNode.disconnect();
@@ -131,18 +137,18 @@ export function usePianoAudio() {
 
   const killAllNotes = () => {
     if (!audioContext.current) return;
-    
+
     // Immediately stop and disconnect all audio nodes
-    audioNodes.current.forEach((nodes, key) => {
+    audioNodes.current.forEach((nodes) => {
       try {
         nodes.oscillator.stop();
         nodes.oscillator.disconnect();
         nodes.gainNode.disconnect();
-      } catch (error) {
+      } catch {
         // Ignore errors if nodes are already stopped
       }
     });
-    
+
     // Clear all states
     audioNodes.current.clear();
     keyStates.current.clear();
@@ -151,8 +157,8 @@ export function usePianoAudio() {
 
   const toggleMute = () => {
     if (!audioContext.current) return;
-    
-    setIsMuted(prev => {
+
+    setIsMuted((prev) => {
       if (!prev) {
         killAllNotes();
       }
@@ -164,6 +170,6 @@ export function usePianoAudio() {
     activeKeys,
     isMuted,
     toggleMute,
-    killAllNotes
+    killAllNotes,
   };
 }

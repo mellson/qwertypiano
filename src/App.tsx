@@ -1,4 +1,3 @@
-import React from 'react';
 import Piano from './components/Piano';
 
 function App() {
