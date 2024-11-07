@@ -16,8 +16,8 @@ export function PianoKey({ keyChar, noteData, isActive }: PianoKeyProps) {
         ${isBlack ? 'w-12 h-32' : 'w-16 h-48'} 
         relative flex items-end justify-center pb-4
         rounded-lg transition-all
-        ${isBlack ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-100'}
-        ${isActive ? 'scale-[0.98] ' + (isBlack ? 'bg-gray-700' : 'bg-gray-200') : ''}
+        ${isBlack ? 'bg-gray-900 hover:bg-orange-600' : 'bg-white hover:bg-pink-500'}
+        ${isActive ? 'scale-[0.98] ' + (isBlack ? 'bg-red-700' : 'bg-blue-500') : ''}
         ${isBlack ? 'shadow-lg' : 'shadow-md'}
       `}
     >
